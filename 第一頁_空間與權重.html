@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<!-- 作者：Claude Opus 5.5（應數 AI 作業三 協作），20261110 -->
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>空間與權重</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+:root{
+  --bg:#f7f6f2; --card:#ffffff; --ink:#1f2328; --muted:#5b6170; --line:#d9d7d0;
+  --a:#2563c9; --b:#d9731a; --c:#1a9b6c; --d:#8a4fd1; --grid:#ecebe6; --accent-bg:#eef3fb;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16181d; --card:#1f2229; --ink:#e7e9ee; --muted:#a2a8b5; --line:#343844;
+    --a:#6ea2ff; --b:#ffa04d; --c:#45d19c; --d:#b78bff; --grid:#2a2e37; --accent-bg:#1c2738;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16181d; --card:#1f2229; --ink:#e7e9ee; --muted:#a2a8b5; --line:#343844;
+  --a:#6ea2ff; --b:#ffa04d; --c:#45d19c; --d:#b78bff; --grid:#2a2e37; --accent-bg:#1c2738;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC","Segoe UI",system-ui,sans-serif;line-height:1.7}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:1.6rem;margin:.3em 0}
+h2{font-size:1.25rem;margin:.2em 0 .6em}
+h3{font-size:1.05rem;margin:1em 0 .4em}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button,select,input[type=number]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+button{cursor:pointer} button:hover{border-color:var(--a)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:16px 0}
+.eq{background:var(--accent-bg);padding:4px 14px;border-radius:8px;margin:8px 0;overflow-x:auto}
+.muted{color:var(--muted)}
+.ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 18px;margin:10px 0}
+.ctrl label{display:flex;flex-direction:column;gap:4px;font-size:.95rem}
+.row{display:flex;gap:8px;align-items:center}
+.row input[type=range]{flex:1;min-width:0}
+.row input[type=number]{width:80px}
+.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.plot{border:1px solid var(--line);border-radius:10px;padding:8px;min-width:0}
+.plot .cap{font-size:.9rem;color:var(--muted);margin-bottom:4px}
+canvas{width:100%;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:.9rem;color:var(--muted);margin-top:4px}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
+table.gram{border-collapse:collapse;font-family:Consolas,monospace;font-size:.85rem;margin:auto}
+table.gram td{border:1px solid var(--line);padding:3px 6px;text-align:right}
+.scroll{overflow-x:auto}
+.stat{font-size:.95rem;overflow-x:auto}
+.katex{font-size:1.05em;position:relative}
+.katex-display{overflow-x:auto;overflow-y:hidden;padding:2px 0}
+.card{min-width:0;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1><span class="t" data-en="Function Spaces: Interval + Weight">函數空間：區間 + 權重</span></h1>
+  <div class="btns">
+    <button id="langBtn">English</button>
+    <button id="dlBtn"><span class="t" data-en="Download HTML">下載 HTML</span></button>
+  </div>
+</header>
+<p class="muted"><span class="t" data-en="Applied Mathematics · Arfken 7th ed. §5.1–5.2 · AI Homework 3, Page 1">應用數學 · Arfken 第 7 版 §5.1–5.2 · 第三次 AI 作業 第一頁</span></p>
+
+<section class="card">
+  <h2><span class="t" data-en="Problem">題目</span></h2>
+  <p class="t" data-en="Start from the same list of functions \(1, x, x^2, x^3, \dots\). Use three different inner products \(\langle f,g\rangle = \int w(x)\, f(x)\, g(x)\, dx\): (a) \([-1,1]\) with \(w = 1\); (b) \([0,\infty)\) with \(w = e^{-x}\); (c) \((-\infty,\infty)\) with \(w = e^{-x^2}\). (1) Apply Gram-Schmidt in each space and show that the resulting orthonormal functions are the Legendre, Laguerre and Hermite polynomials. (2) Show that \(w = 1\) on \([-1,1]\) is exactly the Jacobian \(\sin\theta\) on the sphere when \(x = \cos\theta\). (3) Expand functions in Legendre polynomials and show completeness: the error \(\|f - f_N\|^2 \to 0\) and Parseval's identity holds. Apply this to the potential of a finite dipole on the unit sphere.">
+    從同一串函數 \(1, x, x^2, x^3, \dots\) 出發，使用三種不同的內積 \(\langle f,g\rangle = \int w(x)\, f(x)\, g(x)\, dx\)：(a) \([-1,1]\)、\(w = 1\)；(b) \([0,\infty)\)、\(w = e^{-x}\)；(c) \((-\infty,\infty)\)、\(w = e^{-x^2}\)。(1) 在各空間做 Gram-Schmidt，說明得到的正交歸一函數就是 Legendre、Laguerre、Hermite 多項式。(2) 說明令 \(x = \cos\theta\) 時，\([-1,1]\) 上的 \(w = 1\) 正是球面上的 Jacobian \(\sin\theta\)。(3) 用 Legendre 多項式展開函數，展示 completeness：誤差 \(\|f - f_N\|^2 \to 0\)，且 Parseval 等式成立；並應用到單位球面上有限偶極的電位。
+  </p>
+</section>
+
+<section class="card">
+  <h2><span class="t" data-en="Physical and Mathematical Principles">物理原理解析</span></h2>
+  <h3><span class="t" data-en="1. What defines a function space?">1. 是什麼決定了一個函數空間？</span></h3>
+  <p class="t" data-en="Functions behave like vectors: they can be added and scaled. To talk about length and angle we need an inner product. For real functions on an interval \((a,b)\) with weight \(w(x) > 0\):">函數可以相加、可以乘常數，所以像向量一樣。要談「長度」和「夾角」，還需要內積。對區間 \((a,b)\)、權重 \(w(x) > 0\) 的實函數：</p>
+  <div class="eq">\[\langle f, g\rangle = \int_a^b w(x)\, f(x)\, g(x)\, dx, \qquad \|f\|^2 = \langle f, f\rangle < \infty\]</div>
+  <p class="t" data-en="The interval and the weight together define the space \(L^2_w(a,b)\). Change either one and you change which functions are orthogonal — it is a different space, even though \(1, x, x^2, \dots\) look the same. (For complex functions, \(f\) is conjugated: \(\langle f,g\rangle = \int w\, f^* g\, dx\).)">區間和權重一起決定了空間 \(L^2_w(a,b)\)。換掉任何一個，哪些函數互相正交就跟著改變，即使 \(1, x, x^2, \dots\) 看起來一模一樣，它們已經住在不同的空間。（複數函數要取共軛：\(\langle f,g\rangle = \int w\, f^* g\, dx\)。）</p>
+  <h3><span class="t" data-en="2. Gram-Schmidt orthogonalization (§5.2)">2. Gram-Schmidt 正交化（§5.2）</span></h3>
+  <p class="t" data-en="Take the next function, subtract its projections onto all previous orthonormal functions, then normalize:">取下一個函數，扣掉它在前面所有正交歸一函數上的投影，再歸一化：</p>
+  <div class="eq">\[\psi_k = x^k - \sum_{j\lt k} \langle \varphi_j, x^k\rangle\, \varphi_j, \qquad \varphi_k = \frac{\psi_k}{\|\psi_k\|}\]</div>
+  <p class="t" data-en="Same input, different inner products → Legendre (\(w=1\), \([-1,1]\)), Laguerre (\(w=e^{-x}\), \([0,\infty)\)), Hermite (\(w=e^{-x^2}\), \(\mathbb{R}\)). The Gram matrix \(G_{ij} = \langle \varphi_i, \varphi_j\rangle\) must become the identity.">輸入相同、內積不同 → Legendre（\(w=1\)，\([-1,1]\)）、Laguerre（\(w=e^{-x}\)，\([0,\infty)\)）、Hermite（\(w=e^{-x^2}\)，\(\mathbb{R}\)）。Gram 矩陣 \(G_{ij} = \langle \varphi_i, \varphi_j\rangle\) 必須變成單位矩陣。</p>
+  <h3><span class="t" data-en="3. The weight is a Jacobian">3. 權重就是 Jacobian</span></h3>
+  <p class="t" data-en="On a sphere the area element is \(\sin\theta\, d\theta\, d\phi\). For functions that depend only on \(\theta\), set \(x = \cos\theta\), so \(dx = -\sin\theta\, d\theta\):">球面上的面積元素是 \(\sin\theta\, d\theta\, d\phi\)。對只和 \(\theta\) 有關的函數，令 \(x = \cos\theta\)，則 \(dx = -\sin\theta\, d\theta\)：</p>
+  <div class="eq">\[\int_0^{\pi} f(\theta)\, g(\theta)\, \sin\theta\, d\theta = \int_{-1}^{1} f(x)\, g(x)\, dx\]</div>
+  <p class="t" data-en="So the 'plain' space \([-1,1]\) with \(w = 1\) is the sphere in disguise, and the Legendre polynomials \(P_l(\cos\theta)\) are orthogonal on the sphere with weight \(\sin\theta\). Choosing coordinates chooses a weight; the underlying space is the same.">所以「單純」的 \([-1,1]\)、\(w = 1\)，其實就是換了裝的球面；Legendre 多項式 \(P_l(\cos\theta)\) 在球面上以 \(\sin\theta\) 為權重正交。選座標就是選權重，背後的空間是同一個。</p>
+  <h3><span class="t" data-en="4. Completeness and Parseval">4. Completeness 與 Parseval</span></h3>
+  <p class="t" data-en="A basis is complete when every \(f\) in the space can be expanded and the error goes to zero. With the standard \(P_l\), \(\langle P_l, P_l\rangle = \frac{2}{2l+1}\):">若空間中每個 \(f\) 都能展開，且誤差趨於零，基底就是完備的。用標準的 \(P_l\)，\(\langle P_l, P_l\rangle = \frac{2}{2l+1}\)：</p>
+  <div class="eq">\[f(x) = \sum_{l=0}^{\infty} c_l P_l(x), \qquad c_l = \frac{2l+1}{2}\int_{-1}^{1} f\, P_l\, dx, \qquad \|f\|^2 = \sum_{l=0}^{\infty} \frac{2\,|c_l|^2}{2l+1}\]</div>
+  <p class="t" data-en="For finite \(N\) the partial sums satisfy Bessel's inequality \(\sum_{l\le N} \frac{2|c_l|^2}{2l+1} \le \|f\|^2\); completeness means the gap closes as \(N \to \infty\).">有限 \(N\) 時，部分和滿足 Bessel 不等式 \(\sum_{l\le N} \frac{2|c_l|^2}{2l+1} \le \|f\|^2\)；completeness 的意思是 \(N \to \infty\) 時差距會消失。</p>
+  <h3><span class="t" data-en="5. Application: a finite dipole">5. 應用：有限偶極</span></h3>
+  <p class="t" data-en="Charges \(+q\) at \(\tfrac{d}{2}\hat z\) and \(-q\) at \(-\tfrac{d}{2}\hat z\). On the unit sphere (in units of \(q/4\pi\varepsilon_0\)):">\(+q\) 在 \(\tfrac{d}{2}\hat z\)、\(-q\) 在 \(-\tfrac{d}{2}\hat z\)。在單位球面上（單位 \(q/4\pi\varepsilon_0\)）：</p>
+  <div class="eq">\[V(\theta) = \frac{1}{\sqrt{1 - d\cos\theta + d^2/4}} - \frac{1}{\sqrt{1 + d\cos\theta + d^2/4}}\]</div>
+  <p class="t" data-en="\(V\) changes sign under \(\cos\theta \to -\cos\theta\), so only odd \(l\) survive: \(l = 1\) is the dipole, \(l = 3\) the octupole correction, and so on. Larger \(d\) makes higher multipoles more important. (This uses the orthogonality from §5.2; the generating function itself is in the Legendre chapter.)">\(V\) 在 \(\cos\theta \to -\cos\theta\) 時變號，所以只剩奇數 \(l\)：\(l = 1\) 是偶極，\(l = 3\) 是八極修正，依此類推。\(d\) 越大，高階多極越重要。（這裡用的是 §5.2 的正交性；生成函數本身在 Legendre 章。）</p>
+</section>
+
+<section class="card">
+  <h2><span class="t" data-en="Module 1 · Same \(1, x, x^2\), different inner products">模組 1 · 同樣的 \(1, x, x^2\)，不同的內積</span></h2>
+  <div class="ctrl">
+    <label><span class="t" data-en="Space (interval, weight)">空間（區間、權重）</span>
+      <select id="space">
+        <option value="leg">[−1, 1], w = 1 → Legendre</option>
+        <option value="lag">[0, ∞), w = e⁻ˣ → Laguerre</option>
+        <option value="her">(−∞, ∞), w = exp(−x²) → Hermite</option>
+      </select>
+    </label>
+    <label><span class="t" data-en="Highest degree \(n\)">最高階數 \(n\)</span>
+      <div class="row"><input type="range" id="nDeg" min="0" max="6" value="4"><input type="number" id="nDegN" min="0" max="6" value="4"></div>
+    </label>
+    <label><span class="t" data-en="Gram-Schmidt step \(k\)">Gram-Schmidt 第 \(k\) 步</span>
+      <div class="row"><input type="range" id="kStep" min="0" max="4" value="2"><input type="number" id="kStepN" min="0" max="4" value="2"></div>
+    </label>
+  </div>
+  <div class="plots">
+    <div class="plot">
+      <div class="cap"><span class="t" data-en="Orthonormal functions \(\varphi_0, \dots, \varphi_n\)">正交歸一函數 \(\varphi_0, \dots, \varphi_n\)</span></div>
+      <canvas id="cBasis" height="300"></canvas>
+      <div class="legend" id="lgBasis"></div>
+    </div>
+    <div class="plot">
+      <div class="cap"><span class="t" data-en="Step \(k\): \(x^k\), its projection, and the remainder (same scale)">第 \(k\) 步：\(x^k\)、它的投影、扣掉後的剩餘（同比例縮放）</span></div>
+      <canvas id="cStep" height="300"></canvas>
+      <div class="legend" id="lgStep"></div>
+    </div>
+  </div>
+  <h3><span class="t" data-en="Gram matrix \(\langle\varphi_i, \varphi_j\rangle\) (numerical)">Gram 矩陣 \(\langle\varphi_i, \varphi_j\rangle\)（數值積分）</span></h3>
+  <div class="scroll"><table class="gram" id="gram"></table></div>
+  <p class="muted" id="wNote"></p>
+  <div id="sphereBox">
+    <h3><span class="t" data-en="Sphere view: \(P_l(\cos\theta)\) with weight \(\sin\theta\)">球座標視角：\(P_l(\cos\theta)\)，權重 \(\sin\theta\)</span></h3>
+    <div class="plots">
+      <div class="plot">
+        <div class="cap"><span class="t" data-en="Polar plot \(r = |P_l(\cos\theta)|\), \(\theta\) measured from the \(z\)-axis (blue \(+\), orange \(-\))">極座標圖 \(r = |P_l(\cos\theta)|\)，\(\theta\) 從 \(z\) 軸量起（藍 \(+\)，橘 \(-\)）</span></div>
+        <canvas id="cPolar" height="300"></canvas>
+      </div>
+      <div class="plot">
+        <div class="cap"><span class="t" data-en="Check: the sphere integral with \(\sin\theta\) equals the plain integral in \(x\)">驗證：球面上帶 \(\sin\theta\) 的積分等於 \(x\) 上的普通積分</span></div>
+        <label class="row"><span>\(l =\)</span><input type="range" id="lPol" min="0" max="6" value="2"><input type="number" id="lPolN" min="0" max="6" value="2"></label>
+        <label class="row"><span>\(m =\)</span><input type="range" id="mPol" min="0" max="6" value="2"><input type="number" id="mPolN" min="0" max="6" value="2"></label>
+        <div class="stat" id="sphereStat"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2><span class="t" data-en="Module 2 · Completeness in pictures">模組 2 · Completeness 的圖像</span></h2>
+  <div class="ctrl">
+    <label><span class="t" data-en="Function \(f(x)\), \(x = \cos\theta\)">函數 \(f(x)\)，\(x = \cos\theta\)</span>
+      <select id="func">
+        <option value="dip">dipole V(θ) / 有限偶極 V(θ)</option>
+        <option value="sgn">sgn(x)</option>
+        <option value="abs">|x|</option>
+        <option value="exp">eˣ</option>
+      </select>
+    </label>
+    <label><span class="t" data-en="Number of terms \(N\) (\(l = 0, \dots, N\))">展開項數 \(N\)（\(l = 0, \dots, N\)）</span>
+      <div class="row"><input type="range" id="nTerm" min="0" max="40" value="3"><input type="number" id="nTermN" min="0" max="40" value="3"></div>
+    </label>
+    <label id="dBox"><span class="t" data-en="Charge separation \(d\) (sphere radius \(= 1\))">電荷間距 \(d\)（球半徑 \(= 1\)）</span>
+      <div class="row"><input type="range" id="dSep" min="0.1" max="1.9" step="0.05" value="1.2"><input type="number" id="dSepN" min="0.1" max="1.9" step="0.05" value="1.2"></div>
+    </label>
+  </div>
+  <div class="plots">
+    <div class="plot">
+      <div class="cap"><span class="t" data-en="\(f(x)\) and the partial sum \(f_N(x)\)">\(f(x)\) 與部分和 \(f_N(x)\)</span></div>
+      <canvas id="cExp" height="280"></canvas>
+      <div class="legend" id="lgExp"></div>
+    </div>
+    <div class="plot">
+      <div class="cap"><span class="t" data-en="Coefficients \(|c_l|\) (highlighted: used in \(f_N\))">係數 \(|c_l|\)（亮色：\(f_N\) 有用到的項）</span></div>
+      <canvas id="cCoef" height="280"></canvas>
+    </div>
+    <div class="plot">
+      <div class="cap"><span class="t" data-en="Error \(\|f - f_N\|^2\) vs \(N\) (log scale)">誤差 \(\|f - f_N\|^2\) 對 \(N\)（對數軸）</span></div>
+      <canvas id="cErr" height="280"></canvas>
+    </div>
+  </div>
+  <div class="stat" id="parseval"></div>
+</section>
+
+<p class="muted" style="text-align:center"><span class="t" data-en="Numerical integration: composite Simpson rule. Infinite intervals are truncated where the weight is negligible.">數值積分：複合 Simpson 法；無窮區間截斷在權重可忽略之處。</span></p>
+</div>
+
+<script>
+// ---------- KaTeX 渲染（內容更新後自動重繪） ----------
+function tex(){
+  if (window.renderMathInElement) renderMathInElement(document.body, {
+    delimiters:[{left:'\\[', right:'\\]', display:true}, {left:'\\(', right:'\\)', display:false}],
+    ignoredTags:['script','noscript','style','textarea','option','select'], throwOnError:false});
+}
+let texPending = false;
+const texObs = new MutationObserver(() => { if (texPending) return; texPending = true;
+  setTimeout(() => { texPending = false; tex(); }, 0); });
+
+// ---------- 語言 ----------
+let lang = 'zh';
+const T = (zh, en) => lang === 'zh' ? zh : en;
+document.querySelectorAll('.t').forEach(el => { el.dataset.zh = el.innerHTML; });
+function setLang(l){
+  lang = l;
+  document.documentElement.lang = l === 'zh' ? 'zh-Hant' : 'en';
+  document.querySelectorAll('.t').forEach(el => { el.innerHTML = l === 'zh' ? el.dataset.zh : el.dataset.en; });
+  document.getElementById('langBtn').textContent = l === 'zh' ? 'English' : '中文';
+  drawAll();
+}
+document.getElementById('langBtn').onclick = () => setLang(lang === 'zh' ? 'en' : 'zh');
+document.getElementById('dlBtn').onclick = () => {
+  fetch(location.href).then(r => r.text()).catch(() => null).then(src => {
+    const html = src || ('<!DOCTYPE html>\n' + document.documentElement.outerHTML);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([html], {type:'text/html'}));
+    a.download = '第一頁_空間與權重.html'; a.click();
+  });
+};
+
+// ---------- 數值工具 ----------
+function simpsonGrid(a, b, n){
+  const x = [], s = [], h = (b - a) / n;
+  for (let i = 0; i <= n; i++){ x.push(a + i*h); s.push((i===0||i===n?1:(i%2?4:2)) * h/3); }
+  return {x, s};
+}
+const SPACES = {
+  leg:{a:-1,b:1,  w:x=>1,              view:[-1,1], name:'Legendre'},
+  lag:{a:0, b:60, w:x=>Math.exp(-x),   view:[0,12], name:'Laguerre'},
+  her:{a:-8,b:8,  w:x=>Math.exp(-x*x), view:[-4,4], name:'Hermite'},
+};
+const NG = 6000;
+function buildSpace(key, nmax){
+  const sp = SPACES[key], g = simpsonGrid(sp.a, sp.b, NG);
+  const W = g.x.map((x,i) => g.s[i] * sp.w(x));
+  const ip = (f, h) => { let t = 0; for (let i = 0; i < f.length; i++) t += W[i]*f[i]*h[i]; return t; };
+  const raw = [], phi = [], proj = [];
+  for (let k = 0; k <= nmax; k++){
+    const v = g.x.map(x => Math.pow(x, k));
+    raw.push(v.slice());
+    const p = new Array(v.length).fill(0), r = v.slice();
+    for (let j = 0; j < k; j++){
+      const c = ip(phi[j], r);
+      for (let i = 0; i < r.length; i++){ r[i] -= c*phi[j][i]; p[i] += c*phi[j][i]; }
+    }
+    proj.push(p);
+    const nr = Math.sqrt(ip(r, r));
+    phi.push(r.map(t => t/nr));
+  }
+  const resid = raw.map((v, k) => v.map((t, i) => t - proj[k][i]));
+  const G = phi.map(a => phi.map(b => ip(a, b)));
+  return {x:g.x, phi, raw, proj, resid, G, sp};
+}
+function legendreAll(x, L){
+  const P = [x.map(()=>1)];
+  if (L >= 1) P.push(x.slice());
+  for (let l = 1; l < L; l++) P.push(x.map((t,i) => ((2*l+1)*t*P[l][i] - l*P[l-1][i])/(l+1)));
+  return P;
+}
+
+// ---------- 繪圖 ----------
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const PAL = () => [css('--a'), css('--b'), css('--c'), css('--d'), '#c94a7a', '#7a8a1a', '#3aa0b5'];
+function setup(cv){
+  if (!cv.dataset.h) cv.dataset.h = cv.getAttribute('height');
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = +cv.dataset.h;
+  cv.width = w*dpr; cv.height = h*dpr; cv.style.height = h + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  return {ctx, w, h};
+}
+function fmt(v){ const a = Math.abs(v); if (a === 0) return '0'; if (a >= 1e3 || a < 1e-2) return v.toExponential(0); return +v.toFixed(2) + ''; }
+function niceTicks(lo, hi, n=5){
+  const step0 = (hi-lo)/n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1,2,5,10].map(m=>m*mag).find(s => s >= step0) || mag*10;
+  const t = []; for (let v = Math.ceil(lo/step)*step; v <= hi + 1e-12; v += step) t.push(+v.toFixed(10));
+  return t;
+}
+function axes(ctx, w, h, xr, yr, opt={}){
+  const m = {l:46, r:10, t:10, b:28};
+  const X = x => m.l + (x - xr[0])/(xr[1]-xr[0])*(w-m.l-m.r);
+  const Y = opt.logy ? (y => m.t + (Math.log10(yr[1]) - Math.log10(Math.max(y,1e-300)))/(Math.log10(yr[1])-Math.log10(yr[0]))*(h-m.t-m.b))
+                     : (y => m.t + (yr[1]-y)/(yr[1]-yr[0])*(h-m.t-m.b));
+  ctx.font = '11px system-ui, sans-serif'; ctx.lineWidth = 1;
+  ctx.strokeStyle = css('--grid'); ctx.fillStyle = css('--muted');
+  niceTicks(xr[0], xr[1]).forEach(v => { ctx.beginPath(); ctx.moveTo(X(v), m.t); ctx.lineTo(X(v), h-m.b); ctx.stroke(); ctx.textAlign='center'; ctx.fillText(fmt(v), X(v), h-m.b+14); });
+  if (opt.logy){
+    for (let e = Math.ceil(Math.log10(yr[0])); e <= Math.log10(yr[1]); e++){
+      const y = Y(Math.pow(10,e)); ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(w-m.r, y); ctx.stroke(); ctx.textAlign='right'; ctx.fillText('1e'+e, m.l-4, y+4);
+    }
+  } else {
+    niceTicks(yr[0], yr[1]).forEach(v => { ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(w-m.r, Y(v)); ctx.stroke(); ctx.textAlign='right'; ctx.fillText(fmt(v), m.l-4, Y(v)+4); });
+    if (yr[0] < 0 && yr[1] > 0){ ctx.strokeStyle = css('--line'); ctx.beginPath(); ctx.moveTo(m.l, Y(0)); ctx.lineTo(w-m.r, Y(0)); ctx.stroke(); }
+  }
+  ctx.strokeStyle = css('--line'); ctx.strokeRect(m.l, m.t, w-m.l-m.r, h-m.t-m.b);
+  return {X, Y, m, w, h};
+}
+function line(ctx, A, xs, ys, color, opt={}){
+  ctx.save(); ctx.beginPath(); ctx.rect(A.m.l, A.m.t, A.w - A.m.l - A.m.r, A.h - A.m.t - A.m.b); ctx.clip();
+  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = opt.width || 2; ctx.setLineDash(opt.dash || []);
+  let started = false;
+  for (let i = 0; i < xs.length; i++){
+    const y = ys[i]; if (!isFinite(y)){ started = false; continue; }
+    const px = A.X(xs[i]), py = A.Y(y);
+    if (!started){ ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+  }
+  ctx.stroke(); ctx.restore();
+}
+function legend(id, items){
+  document.getElementById(id).innerHTML = items.map(([c, t, dash]) =>
+    `<span>${c ? `<i style="background:${dash ? 'repeating-linear-gradient(90deg,'+c+' 0 5px,transparent 5px 8px)' : c}"></i>` : ''}${t}</span>`).join('');
+}
+function viewSlice(x, view){ const idx = []; for (let i = 0; i < x.length; i++) if (x[i] >= view[0]-1e-12 && x[i] <= view[1]+1e-12) idx.push(i); return idx; }
+function rangeOf(arrs, pad=0.08){
+  let lo = Infinity, hi = -Infinity;
+  arrs.forEach(a => a.forEach(v => { if (isFinite(v)){ lo = Math.min(lo, v); hi = Math.max(hi, v); } }));
+  if (lo === hi){ lo -= 1; hi += 1; }
+  const p = (hi-lo)*pad; return [lo-p, hi+p];
+}
+
+// ---------- 控制項同步 ----------
+function link(r, n, cb){
+  const R = document.getElementById(r), N = document.getElementById(n);
+  R.oninput = () => { N.value = R.value; cb(); };
+  N.onchange = () => { let v = Math.min(+N.max, Math.max(+N.min, +N.value || 0)); N.value = v; R.value = v; cb(); };
+}
+const val = id => +document.getElementById(id).value;
+
+// ---------- 模組 1 ----------
+let S1 = null, S1key = '';
+function drawM1(){
+  const key = document.getElementById('space').value, n = val('nDeg');
+  const kR = document.getElementById('kStep'), kN = document.getElementById('kStepN');
+  kR.max = kN.max = n; if (+kR.value > n){ kR.value = kN.value = n; }
+  const k = val('kStep');
+  if (S1key !== key + n){ S1 = buildSpace(key, n); S1key = key + n; }
+  const {x, phi, raw, proj, resid, G, sp} = S1, idx = viewSlice(x, sp.view);
+  const xs = idx.map(i => x[i]), pal = PAL();
+  const sw = i => key === 'leg' ? 1 : Math.sqrt(sp.w(x[i]));
+
+  let cv = setup(document.getElementById('cBasis'));
+  const ys = phi.map(f => idx.map(i => f[i]*sw(i)));
+  let A = axes(cv.ctx, cv.w, cv.h, sp.view, rangeOf(ys));
+  ys.forEach((y, j) => line(cv.ctx, A, xs, y, pal[j % pal.length]));
+  const pre = key === 'leg' ? '' : String.raw`\sqrt{w}\,`;
+  legend('lgBasis', phi.map((_, j) => [pal[j % pal.length], String.raw`\(${pre}\varphi_{${j}}\)`]).concat(key === 'leg' ? [] :
+    [[null, T(String.raw`（乘上 \(\sqrt{w}\) 才看得出正交結構；Hermite 情形就是諧振子波函數）`, String.raw`(multiplied by \(\sqrt{w}\) to show the orthogonal structure; for Hermite these are the harmonic-oscillator wavefunctions)`)]]));
+
+  cv = setup(document.getElementById('cStep'));
+  const sc = 1 / Math.max(...idx.map(i => Math.abs(raw[k][i]*sw(i))), 1e-12);
+  const yv = [raw[k], proj[k], resid[k]].map(f => idx.map(i => f[i]*sw(i)*sc));
+  A = axes(cv.ctx, cv.w, cv.h, sp.view, rangeOf(yv));
+  line(cv.ctx, A, xs, yv[0], pal[0], {width:2.5});
+  line(cv.ctx, A, xs, yv[1], pal[1], {dash:[6,4]});
+  line(cv.ctx, A, xs, yv[2], pal[2], {width:2.5});
+  legend('lgStep', [[pal[0], String.raw`\(x^{${k}}\)`],
+    [pal[1], T('投影 ', 'projection ') + String.raw`\(\sum_{j<${k}}\langle\varphi_j, x^{${k}}\rangle\varphi_j\)`, true],
+    [pal[2], T('剩餘 ', 'remainder ') + String.raw`\(\psi_{${k}} \propto \varphi_{${k}}\)`]]);
+
+  document.getElementById('gram').innerHTML = G.map(r => '<tr>' + r.map(v => {
+    const bg = Math.abs(v) > 0.5 ? 'var(--accent-bg)' : 'transparent';
+    return `<td style="background:${bg}">${(Math.abs(v) < 5e-4 ? 0 : v).toFixed(3)}</td>`; }).join('') + '</tr>').join('');
+  document.getElementById('wNote').innerHTML = T(
+    String.raw`目前空間：${sp.name}。同樣的 \(1, x, x^2, \dots\) 在這個內積下互相不正交；Gram-Schmidt 之後 Gram 矩陣變成單位矩陣。`,
+    String.raw`Current space: ${sp.name}. The same \(1, x, x^2, \dots\) are not orthogonal under this inner product; after Gram-Schmidt the Gram matrix is the identity.`);
+  document.getElementById('sphereBox').style.display = key === 'leg' ? '' : 'none';
+  if (key === 'leg') drawSphere();
+}
+function drawSphere(){
+  const l = val('lPol'), m = val('mPol'), pal = PAL();
+  const cv = setup(document.getElementById('cPolar')), {ctx, w, h} = cv;
+  const cx = w/2, cy = h/2, R = Math.min(w, h)/2 - 18;
+  ctx.strokeStyle = css('--grid'); ctx.lineWidth = 1;
+  [0.5, 1].forEach(r => { ctx.beginPath(); ctx.arc(cx, cy, r*R, 0, 2*Math.PI); ctx.stroke(); });
+  ctx.beginPath(); ctx.moveTo(cx, cy-R-8); ctx.lineTo(cx, cy+R+8); ctx.moveTo(cx-R-8, cy); ctx.lineTo(cx+R+8, cy); ctx.stroke();
+  ctx.fillStyle = css('--muted'); ctx.font = 'italic 13px serif'; ctx.textAlign = 'left'; ctx.fillText('z', cx+5, cy-R);
+  const th = []; for (let i = 0; i <= 720; i++) th.push(i/720*2*Math.PI);
+  const P = legendreAll(th.map(t => Math.cos(t)), l)[l];
+  for (let i = 0; i < th.length-1; i++){
+    const r = Math.abs(P[i])*R, r2 = Math.abs(P[i+1])*R;
+    ctx.beginPath(); ctx.strokeStyle = P[i] >= 0 ? pal[0] : pal[1]; ctx.lineWidth = 2.5;
+    ctx.moveTo(cx + r*Math.sin(th[i]), cy - r*Math.cos(th[i]));
+    ctx.lineTo(cx + r2*Math.sin(th[i+1]), cy - r2*Math.cos(th[i+1])); ctx.stroke();
+  }
+  ctx.fillStyle = css('--ink'); ctx.font = 'italic 14px serif'; ctx.fillText('P', 8, 20);
+  ctx.font = '11px serif'; ctx.fillText(String(l), 17, 24); ctx.font = '14px serif'; ctx.fillText('(cos θ)', 25, 20);
+  const gT = simpsonGrid(0, Math.PI, 2000), gX = simpsonGrid(-1, 1, 2000);
+  const PT = legendreAll(gT.x.map(Math.cos), Math.max(l,m)), PX = legendreAll(gX.x, Math.max(l,m));
+  let it = 0, ix = 0;
+  for (let i = 0; i < gT.x.length; i++) it += gT.s[i]*PT[l][i]*PT[m][i]*Math.sin(gT.x[i]);
+  for (let i = 0; i < gX.x.length; i++) ix += gX.s[i]*PX[l][i]*PX[m][i];
+  const exact = l === m ? 2/(2*l+1) : 0;
+  document.getElementById('sphereStat').innerHTML =
+    String.raw`\[\int_0^{\pi} P_{${l}} P_{${m}} \sin\theta\, d\theta = ${it.toFixed(6)}\]` +
+    String.raw`\[\int_{-1}^{1} P_{${l}} P_{${m}}\, dx = ${ix.toFixed(6)}\]` +
+    String.raw`\[\text{${T('理論值', 'exact')}}\;\; \frac{2\,\delta_{lm}}{2l+1} = ${exact.toFixed(6)}\]`;
+}
+
+// ---------- 模組 2 ----------
+const G2 = simpsonGrid(-1, 1, 4000), LMAX = 40, P2 = legendreAll(G2.x, LMAX);
+function fOf(key, d){
+  return G2.x.map(x => {
+    if (key === 'sgn') return x > 0 ? 1 : (x < 0 ? -1 : 0);
+    if (key === 'abs') return Math.abs(x);
+    if (key === 'exp') return Math.exp(x);
+    return 1/Math.sqrt(1 - d*x + d*d/4) - 1/Math.sqrt(1 + d*x + d*d/4);
+  });
+}
+function sci(v){ const [m, e] = v.toExponential(2).split('e'); return String.raw`${m}\times 10^{${+e}}`; }
+function drawM2(){
+  const key = document.getElementById('func').value, N = val('nTerm'), d = val('dSep'), pal = PAL();
+  document.getElementById('dBox').style.display = key === 'dip' ? '' : 'none';
+  const f = fOf(key, d), x = G2.x, s = G2.s;
+  const c = [], norm2 = f.reduce((t, v, i) => t + s[i]*v*v, 0);
+  for (let l = 0; l <= LMAX; l++){ let t = 0; for (let i = 0; i < x.length; i++) t += s[i]*f[i]*P2[l][i]; c.push((2*l+1)/2*t); }
+  const fN = x.map((_, i) => { let t = 0; for (let l = 0; l <= N; l++) t += c[l]*P2[l][i]; return t; });
+  const err = [], acc = new Array(x.length).fill(0);
+  for (let n = 0; n <= LMAX; n++){
+    for (let i = 0; i < x.length; i++) acc[i] += c[n]*P2[n][i];
+    let e = 0; for (let i = 0; i < x.length; i++){ const r = f[i]-acc[i]; e += s[i]*r*r; }
+    err.push(Math.max(e, 1e-16));
+  }
+  let cv = setup(document.getElementById('cExp'));
+  let A = axes(cv.ctx, cv.w, cv.h, [-1, 1], rangeOf([f, fN]));
+  line(cv.ctx, A, x, f, pal[0], {width:2.5});
+  line(cv.ctx, A, x, fN, pal[1], {dash:[6,4], width:2});
+  legend('lgExp', [[pal[0], String.raw`\(f(x)\)`], [pal[1], String.raw`\(f_N(x),\ N = ${N}\)`, true]]);
+  cv = setup(document.getElementById('cCoef'));
+  const ac = c.map(Math.abs), cmax = Math.max(...ac) * 1.1 || 1;
+  A = axes(cv.ctx, cv.w, cv.h, [-0.5, LMAX+0.5], [0, cmax]);
+  const bw = (A.X(1)-A.X(0))*0.7;
+  ac.forEach((v, l) => { cv.ctx.fillStyle = l <= N ? pal[0] : css('--line'); cv.ctx.fillRect(A.X(l)-bw/2, A.Y(v), bw, A.Y(0)-A.Y(v)); });
+  cv = setup(document.getElementById('cErr'));
+  const lo = Math.pow(10, Math.floor(Math.log10(Math.min(...err)))), hi = Math.pow(10, Math.ceil(Math.log10(Math.max(...err, norm2))));
+  A = axes(cv.ctx, cv.w, cv.h, [0, LMAX], [lo, hi], {logy:true});
+  line(cv.ctx, A, err.map((_, n) => n), err, pal[2], {width:2});
+  cv.ctx.fillStyle = pal[1]; cv.ctx.beginPath(); cv.ctx.arc(A.X(N), A.Y(err[N]), 5, 0, 2*Math.PI); cv.ctx.fill();
+  let sumN = 0; for (let l = 0; l <= N; l++) sumN += 2*c[l]*c[l]/(2*l+1);
+  let h = String.raw`\[\|f\|^2 = ${norm2.toFixed(6)}, \qquad \sum_{l=0}^{${N}} \frac{2|c_l|^2}{2l+1} = ${sumN.toFixed(6)}, \qquad \text{${T('差距', 'gap')}} = ${sci(norm2 - sumN)} \ge 0 \;\; (\text{Bessel})\]`;
+  if (key === 'dip') h += String.raw`\[\text{${T('偶極：偶數 ', 'Dipole: even ')}}l\text{${T(' 的係數', ' coefficients')}}\;\; \max|c_{\text{even}}| = ${sci(Math.max(...c.filter((_, l) => l%2 === 0).map(Math.abs)) || 1e-300)}\]`;
+  document.getElementById('parseval').innerHTML = h;
+}
+
+function drawAll(){ drawM1(); drawM2(); }
+document.getElementById('space').onchange = drawM1;
+document.getElementById('func').onchange = drawM2;
+link('nDeg', 'nDegN', drawM1); link('kStep', 'kStepN', drawM1);
+link('lPol', 'lPolN', drawSphere); link('mPol', 'mPolN', drawSphere);
+link('nTerm', 'nTermN', drawM2); link('dSep', 'dSepN', drawM2);
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawAll, 150); });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawAll);
+drawAll(); tex();
+texObs.observe(document.body, {childList:true, subtree:true, characterData:true});
+</script>
+</body>
+</html>

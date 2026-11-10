@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<!-- 作者：Claude Opus 5.5（應數 AI 作業三 協作），20261110 -->
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>微分算符的結構</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+:root{
+  --bg:#f7f6f2; --card:#ffffff; --ink:#1f2328; --muted:#5b6170; --line:#d9d7d0;
+  --a:#2563c9; --b:#d9731a; --c:#1a9b6c; --d:#8a4fd1; --grid:#ecebe6; --accent-bg:#eef3fb; --hot:#fff0dc;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16181d; --card:#1f2229; --ink:#e7e9ee; --muted:#a2a8b5; --line:#343844;
+    --a:#6ea2ff; --b:#ffa04d; --c:#45d19c; --d:#b78bff; --grid:#2a2e37; --accent-bg:#1c2738; --hot:#3a2c18;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16181d; --card:#1f2229; --ink:#e7e9ee; --muted:#a2a8b5; --line:#343844;
+  --a:#6ea2ff; --b:#ffa04d; --c:#45d19c; --d:#b78bff; --grid:#2a2e37; --accent-bg:#1c2738; --hot:#3a2c18;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC","Segoe UI",system-ui,sans-serif;line-height:1.7}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:1.6rem;margin:.3em 0}
+h2{font-size:1.25rem;margin:.2em 0 .6em}
+h3{font-size:1.05rem;margin:1em 0 .4em}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button,select,input[type=number]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+button{cursor:pointer} button:hover{border-color:var(--a)}
+button.on{background:var(--accent-bg);border-color:var(--a)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:16px 0}
+.eq{background:var(--accent-bg);padding:4px 14px;border-radius:8px;margin:8px 0;overflow-x:auto}
+.muted{color:var(--muted)}
+.ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 18px;margin:10px 0}
+.ctrl label{display:flex;flex-direction:column;gap:4px;font-size:.95rem}
+.row{display:flex;gap:8px;align-items:center}
+.row input[type=range]{flex:1;min-width:0}
+.row input[type=number]{width:78px}
+.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.plot{border:1px solid var(--line);border-radius:10px;padding:8px;min-width:0}
+.plot .cap{font-size:.9rem;color:var(--muted);margin-bottom:4px}
+canvas{width:100%;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:.9rem;color:var(--muted);margin-top:4px}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:4px}
+.mats{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.mat{border:1px solid var(--line);border-radius:10px;padding:8px;min-width:0}
+.mat .cap{font-size:.9rem;color:var(--muted);margin-bottom:4px}
+.scroll{overflow-x:auto}
+table.m{border-collapse:collapse;font-family:Consolas,monospace;font-size:.8rem;margin:auto}
+table.m td,table.m th{border:1px solid var(--line);padding:3px 5px;text-align:center;white-space:nowrap}
+table.m th{color:var(--muted);font-weight:normal;background:var(--accent-bg)}
+table.m td.nz{background:var(--hot)}
+.stat{font-size:.95rem;overflow-x:auto}
+table.inv{border-collapse:collapse;width:100%;font-size:.9rem}
+table.inv td,table.inv th{border:1px solid var(--line);padding:5px 8px;text-align:center}
+table.inv th{background:var(--accent-bg)}
+.katex{font-size:1.05em;position:relative}
+.katex-display{overflow-x:auto;overflow-y:hidden;padding:2px 0}
+.card{min-width:0;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1><span class="t" data-en="The Structure of the Operator \(d/dx\)">微分算符 \(d/dx\) 的結構</span></h1>
+  <div class="btns">
+    <button id="langBtn">English</button>
+    <button id="dlBtn"><span class="t" data-en="Download HTML">下載 HTML</span></button>
+  </div>
+</header>
+<p class="muted"><span class="t" data-en="Applied Mathematics · Arfken 7th ed. §5.3–5.7 · AI Homework 3, Page 2">應用數學 · Arfken 第 7 版 §5.3–5.7 · 第三次 AI 作業 第二頁</span></p>
+
+<section class="card">
+  <h2><span class="t" data-en="Problem">題目</span></h2>
+  <p class="t" data-en="Consider the space of \(2\pi\)-periodic functions \(V = \mathrm{span}\{\cos kx, \sin kx\}\), \(k = 1,\dots,N\), with inner product \(\langle f,g\rangle = \int_0^{2\pi} f^* g\, dx\), and the operator \(D = d/dx\). (1) Write \(D\) as a matrix in the real orthonormal basis \(\{\cos kx/\sqrt{\pi}, \sin kx/\sqrt{\pi}\}\), find its adjoint, and show that \(D\) is anti-Hermitian while \(iD\) is Hermitian. (2) Change to the basis \(\{e^{\pm ikx}/\sqrt{2\pi}\}\) with a unitary matrix \(U\); show that \(U^\dagger D U\) is diagonal and that the eigenvalues, trace and determinant are unchanged. (3) Show that the translation operator \(e^{aD}\) maps \(f(x)\) to \(f(x+a)\), is unitary, is the Taylor series, and leaves each two-dimensional subspace \(\mathrm{span}\{\cos kx, \sin kx\}\) invariant.">
+    考慮週期 \(2\pi\) 的函數空間 \(V = \mathrm{span}\{\cos kx, \sin kx\}\)，\(k = 1,\dots,N\)，內積 \(\langle f,g\rangle = \int_0^{2\pi} f^* g\, dx\)，以及 operator \(D = d/dx\)。(1) 在實數正交歸一基底 \(\{\cos kx/\sqrt{\pi}, \sin kx/\sqrt{\pi}\}\) 下寫出 \(D\) 的矩陣，求它的 adjoint，說明 \(D\) 是 anti-Hermitian、\(iD\) 是 Hermitian。(2) 用 unitary 矩陣 \(U\) 換到基底 \(\{e^{\pm ikx}/\sqrt{2\pi}\}\)，說明 \(U^\dagger D U\) 是對角矩陣，且本徵值、trace、determinant 不變。(3) 說明平移算符 \(e^{aD}\) 把 \(f(x)\) 變成 \(f(x+a)\)、是 unitary、就是 Taylor 展開，並且每個二維子空間 \(\mathrm{span}\{\cos kx, \sin kx\}\) 都是它的不變子空間。
+  </p>
+</section>
+
+<section class="card">
+  <h2><span class="t" data-en="Physical and Mathematical Principles">物理原理解析</span></h2>
+  <h3><span class="t" data-en="1. Linear operator → matrix (§5.3)">1. Linear operator → 矩陣（§5.3）</span></h3>
+  <p class="t" data-en="\(D\) is linear: \(D(\alpha f + \beta g) = \alpha Df + \beta Dg\). Once an orthonormal basis \(\{\varphi_n\}\) is chosen, \(D\) becomes a matrix whose \(n\)-th column is the coefficient vector of \(D\varphi_n\):">\(D\) 是線性的：\(D(\alpha f + \beta g) = \alpha Df + \beta Dg\)。選定正交歸一基底 \(\{\varphi_n\}\) 之後，\(D\) 就變成矩陣，第 \(n\) 行是 \(D\varphi_n\) 的係數向量：</p>
+  <div class="eq">\[D_{mn} = \langle \varphi_m, D\varphi_n\rangle, \qquad D\cos kx = -k\sin kx, \qquad D\sin kx = k\cos kx\]</div>
+  <h3><span class="t" data-en="2. Adjoint, boundary terms, self-adjoint (§5.4)">2. Adjoint、邊界項、self-adjoint（§5.4）</span></h3>
+  <p class="t" data-en="The adjoint is defined by \(\langle f, Dg\rangle = \langle D^\dagger f, g\rangle\). Integrate by parts:">Adjoint 由 \(\langle f, Dg\rangle = \langle D^\dagger f, g\rangle\) 定義。分部積分：</p>
+  <div class="eq">\[\langle f, Dg\rangle = \Big[f^* g\Big]_0^{2\pi} - \langle Df, g\rangle\]</div>
+  <p class="t" data-en="The boundary term vanishes only because the functions are periodic. Then \(D^\dagger = -D\) (anti-Hermitian), and \((iD)^\dagger = -i\,D^\dagger = iD\) (Hermitian). The property depends on the domain, not only on the formula \(d/dx\): on \([0,\infty)\) the same expression cannot be made self-adjoint. In quantum mechanics \(\hat p = -i\hbar\, d/dx\) is Hermitian for exactly this reason, so its eigenvalues are real.">邊界項會消失，完全是因為函數是週期的。於是 \(D^\dagger = -D\)（anti-Hermitian），而 \((iD)^\dagger = -i\,D^\dagger = iD\)（Hermitian）。這個性質取決於 domain，不只取決於 \(d/dx\) 這個式子：在 \([0,\infty)\) 上同一個式子就無法變成 self-adjoint。量子力學的 \(\hat p = -i\hbar\, d/dx\) 是 Hermitian，正是這個原因，所以本徵值是實數。</p>
+  <h3><span class="t" data-en="3. Unitary change of basis and similarity transformation (§5.5–5.6)">3. Unitary 換基底與 similarity transformation（§5.5–5.6）</span></h3>
+  <p class="t" data-en="Between two orthonormal bases the transformation matrix is unitary, \(U^\dagger U = I\). Coefficient vectors transform as \(c' = U^\dagger c\), and operators as">兩組正交歸一基底之間的轉換矩陣是 unitary，\(U^\dagger U = I\)。係數向量變成 \(c' = U^\dagger c\)，operator 變成</p>
+  <div class="eq">\[D' = U^{-1} D\, U = U^\dagger D\, U, \qquad \frac{e^{ikx}}{\sqrt{2\pi}} = \frac{1}{\sqrt 2}\left(\frac{\cos kx}{\sqrt\pi} + i\,\frac{\sin kx}{\sqrt\pi}\right)\]</div>
+  <p class="t" data-en="A unitary \(U\) preserves inner products (\(\|c'\| = \|c\|\)). Any similarity transformation preserves eigenvalues, trace and determinant. In the complex basis \(D\) is diagonal with eigenvalues \(\pm ik\): the \(e^{ikx}\) are the eigenfunctions of \(D\) (and of the momentum operator).">Unitary 的 \(U\) 保持內積（\(\|c'\| = \|c\|\)）。任何 similarity transformation 都保持本徵值、trace、determinant。在複數基底下 \(D\) 是對角的，本徵值 \(\pm ik\)：\(e^{ikx}\) 就是 \(D\)（也是動量算符）的本徵函數。</p>
+  <h3><span class="t" data-en="4. Translation \(e^{aD}\) and invariant subspaces (§5.5, §5.7)">4. 平移 \(e^{aD}\) 與不變子空間（§5.5、§5.7）</span></h3>
+  <div class="eq">\[e^{aD} f(x) = \sum_{n=0}^{\infty} \frac{a^n}{n!} f^{(n)}(x) = f(x + a), \qquad \left(e^{aD}\right)^\dagger = e^{aD^\dagger} = e^{-aD} = \left(e^{aD}\right)^{-1}\]</div>
+  <p class="t" data-en="So \(e^{aD}\) is unitary because \(D\) is anti-Hermitian — just as \(e^{-iHt/\hbar}\) is unitary because \(H\) is Hermitian. In the real basis each block is a rotation by the angle \(ka\); in the complex basis it is the phase \(e^{\pm ika}\). \(D\) maps \(\mathrm{span}\{\cos kx, \sin kx\}\) into itself, so this 2D subspace is invariant: different \(k\) never mix and the matrix is block-diagonal. Over the complex numbers each block splits further into two 1D invariant subspaces \(\mathrm{span}\{e^{\pm ikx}\}\).">所以 \(e^{aD}\) 是 unitary，因為 \(D\) 是 anti-Hermitian；正如 \(e^{-iHt/\hbar}\) 是 unitary 因為 \(H\) 是 Hermitian。實數基底下每個區塊是轉 \(ka\) 角的旋轉；複數基底下是相位 \(e^{\pm ika}\)。\(D\) 把 \(\mathrm{span}\{\cos kx, \sin kx\}\) 映回自己，所以這個二維子空間是不變子空間：不同的 \(k\) 永遠不會混合，矩陣是區塊對角。在複數下，每個區塊還能再拆成兩個一維不變子空間 \(\mathrm{span}\{e^{\pm ikx}\}\)。</p>
+</section>
+
+<section class="card">
+  <h2><span class="t" data-en="The function \(f = \sum_k (a_k\cos kx + b_k \sin kx)\)">函數 \(f = \sum_k (a_k\cos kx + b_k \sin kx)\)</span></h2>
+  <div class="ctrl" id="coefCtrl"></div>
+</section>
+
+<section class="card">
+  <h2><span class="t" data-en="Module 1 · One operator, two bases">模組 1 · 同一個 operator，兩組基底</span></h2>
+  <div class="btns">
+    <button id="opD" class="on">\(D = d/dx\)</button>
+    <button id="opiD">\(iD\)</button>
+  </div>
+  <div class="mats" style="margin-top:10px">
+    <div class="mat"><div class="cap"><span class="t" data-en="Real basis: matrix \(A\) of the operator">實數基底：operator 的矩陣 \(A\)</span></div><div class="scroll" id="mA"></div></div>
+    <div class="mat"><div class="cap"><span class="t" data-en="Change-of-basis matrix \(U\)">換基底矩陣 \(U\)</span></div><div class="scroll" id="mU"></div></div>
+    <div class="mat"><div class="cap"><span class="t" data-en="\(U^\dagger U\) (should be \(I\))">\(U^\dagger U\)（應為 \(I\)）</span></div><div class="scroll" id="mUU"></div></div>
+    <div class="mat"><div class="cap"><span class="t" data-en="Complex basis: \(U^\dagger A U\) (computed numerically)">複數基底：\(U^\dagger A U\)（數值計算）</span></div><div class="scroll" id="mAp"></div></div>
+  </div>
+  <h3><span class="t" data-en="Invariants and representations">不變量與表示</span></h3>
+  <div class="scroll"><table class="inv" id="inv"></table></div>
+  <div class="stat" id="adjStat"></div>
+</section>
+
+<section class="card">
+  <h2><span class="t" data-en="Module 2 · Translation \(e^{aD}\)">模組 2 · 平移 \(e^{aD}\)</span></h2>
+  <div class="ctrl">
+    <label><span class="t" data-en="Shift \(a\)">平移量 \(a\)</span>
+      <div class="row"><input type="range" id="aS" min="0" max="6.2832" step="0.01" value="0.8"><input type="number" id="aSN" min="0" max="6.2832" step="0.01" value="0.8"></div>
+    </label>
+    <label><span class="t" data-en="Taylor terms \(M\)">Taylor 項數 \(M\)</span>
+      <div class="row"><input type="range" id="mT" min="0" max="60" value="4"><input type="number" id="mTN" min="0" max="60" value="4"></div>
+    </label>
+    <label><span class="t" data-en="Animation">動畫</span>
+      <button id="play"></button>
+    </label>
+  </div>
+  <div class="plots">
+    <div class="plot">
+      <div class="cap"><span class="t" data-en="\(f(x)\), \(e^{aD}f = f(x+a)\), and the Taylor partial sum">\(f(x)\)、\(e^{aD}f = f(x+a)\)、Taylor 部分和</span></div>
+      <canvas id="cShift" height="290"></canvas>
+      <div class="legend" id="lgShift"></div>
+    </div>
+    <div class="plot">
+      <div class="cap"><span class="t" data-en="Each invariant subspace: \((a_k, b_k)\) rotates on its own circle">每個不變子空間的 \((a_k, b_k)\) 在自己的圓上轉</span></div>
+      <canvas id="cCirc" height="290"></canvas>
+    </div>
+  </div>
+  <div class="mats" style="margin-top:14px">
+    <div class="mat"><div class="cap"><span class="t" data-en="\(e^{aD}\) in the real basis (rotation blocks)">實數基底下的 \(e^{aD}\)（旋轉區塊）</span></div><div class="scroll" id="mT1"></div></div>
+    <div class="mat"><div class="cap"><span class="t" data-en="\(e^{aD}\) in the complex basis (phases)">複數基底下的 \(e^{aD}\)（相位）</span></div><div class="scroll" id="mT2"></div></div>
+  </div>
+  <div class="stat" id="normStat"></div>
+</section>
+</div>
+
+<script>
+// ---------- KaTeX 渲染（內容更新後自動重繪） ----------
+function tex(){
+  if (window.renderMathInElement) renderMathInElement(document.body, {
+    delimiters:[{left:'\\[', right:'\\]', display:true}, {left:'\\(', right:'\\)', display:false}],
+    ignoredTags:['script','noscript','style','textarea','option','select'], throwOnError:false});
+}
+let texPending = false;
+const texObs = new MutationObserver(() => { if (texPending) return; texPending = true;
+  setTimeout(() => { texPending = false; tex(); }, 0); });
+
+// ---------- 語言 ----------
+let lang = 'zh';
+const T = (zh, en) => lang === 'zh' ? zh : en;
+function initT(root){ root.querySelectorAll('.t').forEach(el => { if (!el.dataset.zh) el.dataset.zh = el.innerHTML; }); }
+initT(document);
+function setLang(l){
+  lang = l;
+  document.documentElement.lang = l === 'zh' ? 'zh-Hant' : 'en';
+  document.querySelectorAll('.t').forEach(el => { el.innerHTML = l === 'zh' ? el.dataset.zh : el.dataset.en; });
+  document.getElementById('langBtn').textContent = l === 'zh' ? 'English' : '中文';
+  playLabel(); drawAll();
+}
+document.getElementById('langBtn').onclick = () => setLang(lang === 'zh' ? 'en' : 'zh');
+document.getElementById('dlBtn').onclick = () => {
+  fetch(location.href).then(r => r.text()).catch(() => null).then(src => {
+    const html = src || ('<!DOCTYPE html>\n' + document.documentElement.outerHTML);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([html], {type:'text/html'}));
+    a.download = '第二頁_微分算符的結構.html'; a.click();
+  });
+};
+
+// ---------- 複數與矩陣 ----------
+const C = (re, im=0) => ({re, im});
+const cadd = (a, b) => C(a.re+b.re, a.im+b.im);
+const cmul = (a, b) => C(a.re*b.re - a.im*b.im, a.re*b.im + a.im*b.re);
+const conj = a => C(a.re, -a.im);
+const zeros = n => Array.from({length:n}, () => Array.from({length:n}, () => C(0)));
+const H = A => A[0].map((_, j) => A.map(r => conj(r[j])));
+function mm(A, B){ const n = A.length, m = B[0].length, R = Array.from({length:n}, () => Array.from({length:m}, () => C(0)));
+  for (let i = 0; i < n; i++) for (let j = 0; j < m; j++){ let s = C(0); for (let k = 0; k < B.length; k++) s = cadd(s, cmul(A[i][k], B[k][j])); R[i][j] = s; } return R; }
+const mv = (A, v) => A.map(r => r.reduce((s, a, k) => cadd(s, cmul(a, v[k])), C(0)));
+function det(A){
+  const n = A.length, M = A.map(r => r.map(z => C(z.re, z.im))); let d = C(1);
+  for (let c = 0; c < n; c++){
+    let p = c; for (let r = c+1; r < n; r++) if (Math.hypot(M[r][c].re, M[r][c].im) > Math.hypot(M[p][c].re, M[p][c].im)) p = r;
+    const pv = M[p][c]; if (Math.hypot(pv.re, pv.im) < 1e-14) return C(0);
+    if (p !== c){ [M[p], M[c]] = [M[c], M[p]]; d = C(-d.re, -d.im); }
+    d = cmul(d, pv); const q = pv.re**2 + pv.im**2, inv = C(pv.re/q, -pv.im/q);
+    for (let r = c+1; r < n; r++){ const f = cmul(M[r][c], inv); for (let k = c; k < n; k++) M[r][k] = cadd(M[r][k], cmul(C(-f.re, -f.im), M[c][k])); }
+  }
+  return d;
+}
+const trace = A => A.reduce((s, r, i) => cadd(s, r[i]), C(0));
+function fz(z, dp=3){ // 純文字（表格內用）
+  const rd = v => { const t = +v.toFixed(dp); return Math.abs(t) < 5e-10 ? 0 : t; };
+  const r = rd(z.re), i = rd(z.im), f = v => String(v).replace('-', '−');
+  if (i === 0) return f(r);
+  const im = Math.abs(i) === 1 ? 'i' : Math.abs(i) + 'i';
+  if (r === 0) return (i < 0 ? '−' : '') + im;
+  return f(r) + (i > 0 ? '+' : '−') + im;
+}
+const tz = (z, dp) => fz(z, dp).replace(/−/g, '-'); // KaTeX 用
+
+// ---------- 基底與矩陣 ----------
+const val = id => +document.getElementById(id).value;
+let N = 2;
+const realLabels = () => { const L = []; for (let k = 1; k <= N; k++) L.push(String.raw`\(c_{${k}}\)`, String.raw`\(s_{${k}}\)`); return L; };
+const cplxLabels = () => { const L = []; for (let k = 1; k <= N; k++) L.push(String.raw`\(e_{+${k}}\)`, String.raw`\(e_{-${k}}\)`); return L; };
+function Dmat(){ const D = zeros(2*N); for (let k = 1; k <= N; k++){ const c = 2*(k-1), s = c+1; D[c][s] = C(k); D[s][c] = C(-k); } return D; }
+function Umat(){ const U = zeros(2*N), r = Math.SQRT1_2; for (let k = 1; k <= N; k++){ const c = 2*(k-1), s = c+1;
+  U[c][c] = C(r); U[c][s] = C(r); U[s][c] = C(0, r); U[s][s] = C(0, -r); } return U; }
+function Tmat(a){ const M = zeros(2*N); for (let k = 1; k <= N; k++){ const c = 2*(k-1), s = c+1, q = k*a;
+  M[c][c] = C(Math.cos(q)); M[c][s] = C(Math.sin(q)); M[s][c] = C(-Math.sin(q)); M[s][s] = C(Math.cos(q)); } return M; }
+function renderMat(id, M, rl, cl){
+  let h = '<table class="m"><tr><th></th>' + cl.map(l => `<th>${l}</th>`).join('') + '</tr>';
+  M.forEach((r, i) => { h += `<tr><th>${rl[i]}</th>` + r.map(z => { const nz = Math.hypot(z.re, z.im) > 5e-10;
+    return `<td class="${nz ? 'nz' : ''}">${fz(z, 2)}</td>`; }).join('') + '</tr>'; });
+  document.getElementById(id).innerHTML = h + '</table>';
+}
+
+// ---------- 係數控制 ----------
+const coef = {a:[0, 1, 0.6, 0.3], b:[0, 0.4, -0.5, 0.7]};
+function buildCoefCtrl(){
+  const box = document.getElementById('coefCtrl');
+  let h = `<label><span class="t" data-en="Number of modes \\(N\\)">模態數 \\(N\\)</span><div class="row"><input type="range" id="nM" min="1" max="3" value="${N}"><input type="number" id="nMN" min="1" max="3" value="${N}"></div></label>`;
+  for (let k = 1; k <= N; k++) for (const ab of ['a', 'b']){
+    h += `<label><span>\\(${ab}_{${k}}\\) <span class="muted">(\\(\\${ab === 'a' ? 'cos' : 'sin'} ${k === 1 ? '' : k}x\\))</span></span><div class="row"><input type="range" id="${ab}${k}" min="-1" max="1" step="0.05" value="${coef[ab][k]}"><input type="number" id="${ab}${k}N" min="-1" max="1" step="0.05" value="${coef[ab][k]}"></div></label>`;
+  }
+  box.innerHTML = h; initT(box);
+  if (lang === 'en') box.querySelectorAll('.t').forEach(el => el.innerHTML = el.dataset.en);
+  link('nM', 'nMN', () => { N = val('nM'); buildCoefCtrl(); drawAll(); });
+  for (let k = 1; k <= N; k++) for (const ab of ['a', 'b']) link(ab + k, ab + k + 'N', () => { coef[ab][k] = val(ab + k); drawAll(); });
+}
+function link(r, n, cb){
+  const R = document.getElementById(r), Nn = document.getElementById(n);
+  R.oninput = () => { Nn.value = R.value; cb(); };
+  Nn.onchange = () => { let v = Math.min(+Nn.max, Math.max(+Nn.min, +Nn.value || 0)); Nn.value = v; R.value = v; cb(); };
+}
+const alpha = () => { const v = []; for (let k = 1; k <= N; k++) v.push(C(Math.sqrt(Math.PI)*coef.a[k]), C(Math.sqrt(Math.PI)*coef.b[k])); return v; };
+const norm2 = v => v.reduce((s, z) => s + z.re*z.re + z.im*z.im, 0);
+function evalF(v, xs){ return xs.map(x => { let s = 0; for (let k = 1; k <= N; k++){ const c = 2*(k-1);
+  s += (v[c].re*Math.cos(k*x) + v[c+1].re*Math.sin(k*x))/Math.sqrt(Math.PI); } return s; }); }
+
+// ---------- 模組 1 ----------
+let useI = false;
+document.getElementById('opD').onclick = () => { useI = false; drawM1(); };
+document.getElementById('opiD').onclick = () => { useI = true; drawM1(); };
+function drawM1(){
+  document.getElementById('opD').classList.toggle('on', !useI);
+  document.getElementById('opiD').classList.toggle('on', useI);
+  let A = Dmat(); if (useI) A = A.map(r => r.map(z => cmul(C(0, 1), z)));
+  const U = Umat(), Ap = mm(mm(H(U), A), U), rl = realLabels(), cl = cplxLabels();
+  renderMat('mA', A, rl, rl); renderMat('mU', U, rl, cl); renderMat('mUU', mm(H(U), U), cl, cl); renderMat('mAp', Ap, cl, cl);
+  const evR = []; for (let k = 1; k <= N; k++) evR.push(useI ? String.raw`\mp ${k}` : String.raw`\pm ${k}i`);
+  const evC = Ap.map((r, i) => tz(r[i], 3));
+  const a = alpha(), cp = mv(H(U), a);
+  const vec = v => String.raw`\((${v.map(z => tz(z, 3)).join(',\\ ')})\)`;
+  document.getElementById('inv').innerHTML =
+    `<tr><th></th><th>${T('實數基底', 'Real basis')}</th><th>${T('複數基底', 'Complex basis')}</th></tr>` +
+    `<tr><td>${T('本徵值', 'Eigenvalues')}</td><td>\\(${evR.join(',\\ ')}\\) <span class="muted">${T('（每個 2×2 區塊：', '(each 2×2 block: ')}\\(\\lambda^2 + k^2 = 0\\)${T('）', ')')}</span></td><td>\\(${evC.join(',\\ ')}\\) <span class="muted">${T('（對角元素）', '(diagonal entries)')}</span></td></tr>` +
+    `<tr><td>\\(\\mathrm{tr}\\)</td><td>\\(${tz(trace(A), 4)}\\)</td><td>\\(${tz(trace(Ap), 4)}\\)</td></tr>` +
+    `<tr><td>\\(\\det\\)</td><td>\\(${tz(det(A), 4)}\\)</td><td>\\(${tz(det(Ap), 4)}\\)</td></tr>` +
+    `<tr><td>${T('\\(f\\) 的係數向量', 'Coefficients of \\(f\\)')}</td><td>${vec(a)}</td><td>${vec(cp)}</td></tr>` +
+    `<tr><td>\\(\\|f\\|^2\\)</td><td>\\(${norm2(a).toFixed(6)}\\)</td><td>\\(${norm2(cp).toFixed(6)}\\)</td></tr>`;
+  const Ah = H(A); let dP = 0, dM = 0;
+  A.forEach((r, i) => r.forEach((z, j) => { dP = Math.max(dP, Math.hypot(Ah[i][j].re - z.re, Ah[i][j].im - z.im)); dM = Math.max(dM, Math.hypot(Ah[i][j].re + z.re, Ah[i][j].im + z.im)); }));
+  const nm = useI ? 'iD' : 'D';
+  document.getElementById('adjStat').innerHTML =
+    String.raw`\[\max|(${nm})^\dagger - ${nm}| = ${dP.toFixed(3)}, \qquad \max|(${nm})^\dagger + ${nm}| = ${dM.toFixed(3)}\]` +
+    (dP < 1e-12 ? T(String.raw`→ \(${nm}\) 是 Hermitian（self-adjoint），本徵值為實數。`, String.raw`→ \(${nm}\) is Hermitian (self-adjoint): real eigenvalues.`)
+                : T(String.raw`→ \(${nm}\) 是 anti-Hermitian，本徵值為純虛數。`, String.raw`→ \(${nm}\) is anti-Hermitian: purely imaginary eigenvalues.`));
+}
+
+// ---------- 繪圖 ----------
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function setup(cv){
+  if (!cv.dataset.h) cv.dataset.h = cv.getAttribute('height');
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = +cv.dataset.h;
+  cv.width = w*dpr; cv.height = h*dpr; cv.style.height = h + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+  return {ctx, w, h};
+}
+function axes(ctx, w, h, xr, yr){
+  const m = {l:42, r:10, t:10, b:28};
+  const X = x => m.l + (x - xr[0])/(xr[1]-xr[0])*(w-m.l-m.r), Y = y => m.t + (yr[1]-y)/(yr[1]-yr[0])*(h-m.t-m.b);
+  ctx.font = '12px serif'; ctx.strokeStyle = css('--grid'); ctx.fillStyle = css('--muted'); ctx.lineWidth = 1;
+  const xt = [[0,'0'],[Math.PI/2,'π/2'],[Math.PI,'π'],[3*Math.PI/2,'3π/2'],[2*Math.PI,'2π']];
+  xt.forEach(([v, s]) => { ctx.beginPath(); ctx.moveTo(X(v), m.t); ctx.lineTo(X(v), h-m.b); ctx.stroke(); ctx.textAlign = 'center'; ctx.fillText(s, X(v), h-m.b+15); });
+  const st = (yr[1]-yr[0]) > 6 ? 2 : (yr[1]-yr[0]) > 3 ? 1 : 0.5;
+  for (let v = Math.ceil(yr[0]/st)*st; v <= yr[1]; v += st){ ctx.beginPath(); ctx.moveTo(m.l, Y(v)); ctx.lineTo(w-m.r, Y(v)); ctx.stroke(); ctx.textAlign = 'right'; ctx.fillText(String(+v.toFixed(2)).replace('-', '−'), m.l-4, Y(v)+4); }
+  ctx.strokeStyle = css('--line'); ctx.beginPath(); ctx.moveTo(m.l, Y(0)); ctx.lineTo(w-m.r, Y(0)); ctx.stroke(); ctx.strokeRect(m.l, m.t, w-m.l-m.r, h-m.t-m.b);
+  return {X, Y, m, w, h};
+}
+function line(ctx, A, xs, ys, color, opt={}){
+  ctx.save(); ctx.beginPath(); ctx.rect(A.m.l, A.m.t, A.w-A.m.l-A.m.r, A.h-A.m.t-A.m.b); ctx.clip();
+  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = opt.width || 2; ctx.setLineDash(opt.dash || []);
+  xs.forEach((x, i) => { const px = A.X(x), py = A.Y(ys[i]); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+  ctx.stroke(); ctx.restore();
+}
+function legend(id, items){
+  document.getElementById(id).innerHTML = items.map(([c, t, dash]) =>
+    `<span><i style="background:${dash ? 'repeating-linear-gradient(90deg,'+c+' 0 5px,transparent 5px 8px)' : c}"></i>${t}</span>`).join('');
+}
+
+// ---------- 模組 2 ----------
+const XS = Array.from({length:401}, (_, i) => i/400*2*Math.PI);
+let lastLegendKey = '';
+function drawM2(){
+  const a = val('aS'), M = val('mT'), al = alpha(), Tm = Tmat(a), sh = mv(Tm, al), D = Dmat();
+  let term = al.slice(), tay = al.slice();
+  for (let n = 1; n <= M; n++){ term = mv(D, term).map(z => C(z.re*a/n, z.im*a/n)); tay = tay.map((z, i) => cadd(z, term[i])); }
+  const f0 = evalF(al, XS), f1 = evalF(sh, XS), ft = evalF(tay, XS);
+  const amp = Math.max(1, ...f0.map(Math.abs)) * 1.25;
+  let cv = setup(document.getElementById('cShift'));
+  const A = axes(cv.ctx, cv.w, cv.h, [0, 2*Math.PI], [-amp, amp]);
+  line(cv.ctx, A, XS, f0, css('--muted'), {width:1.5, dash:[3,3]});
+  line(cv.ctx, A, XS, f1, css('--a'), {width:2.5});
+  line(cv.ctx, A, XS, ft, css('--b'), {width:2, dash:[7,4]});
+  const lk = lang + M;
+  if (lk !== lastLegendKey){ lastLegendKey = lk;
+    legend('lgShift', [[css('--muted'), String.raw`\(f(x)\)`, true], [css('--a'), String.raw`\(f(x+a) = e^{aD}f\)`],
+      [css('--b'), T('Taylor 部分和 ', 'Taylor partial sum ') + String.raw`\(\sum_{n=0}^{${M}} \frac{a^n}{n!} D^n f\)`, true]]); }
+  cv = setup(document.getElementById('cCirc')); const {ctx, w, h} = cv;
+  const pal = [css('--a'), css('--b'), css('--c')], cw = w/N, R = Math.min(cw/2 - 14, h/2 - 34);
+  const rmax = Math.sqrt(Math.PI) * Math.SQRT2;
+  for (let k = 1; k <= N; k++){
+    const cx = cw*(k-0.5), cy = h/2 + 6, c = 2*(k-1), sc = R/rmax;
+    ctx.strokeStyle = css('--grid'); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx-R, cy); ctx.lineTo(cx+R, cy); ctx.moveTo(cx, cy-R); ctx.lineTo(cx, cy+R); ctx.stroke();
+    const r = Math.hypot(al[c].re, al[c+1].re)*sc;
+    ctx.strokeStyle = pal[k-1]; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(cx + al[c].re*sc, cy - al[c+1].re*sc, 4, 0, 2*Math.PI); ctx.strokeStyle = css('--muted'); ctx.stroke();
+    ctx.fillStyle = pal[k-1]; ctx.beginPath(); ctx.arc(cx + sh[c].re*sc, cy - sh[c+1].re*sc, 6, 0, 2*Math.PI); ctx.fill();
+    ctx.fillStyle = css('--ink'); ctx.font = 'italic 14px serif'; ctx.textAlign = 'center';
+    ctx.fillText(`k = ${k}`, cx, 16);
+    ctx.fillStyle = css('--muted'); ctx.font = '13px serif';
+    ctx.fillText(T(`轉角 ka = ${(k*a).toFixed(2)}`, `angle ka = ${(k*a).toFixed(2)}`), cx, 33);
+    ctx.font = 'italic 12px serif'; ctx.fillText('a', cx + R - 6, cy - 5); ctx.fillText('b', cx + 9, cy - R + 10);
+  }
+  const U = Umat(), rl = realLabels(), cl = cplxLabels();
+  renderMat('mT1', Tm, rl, rl); renderMat('mT2', mm(mm(H(U), Tm), U), cl, cl);
+  const blocks = []; for (let k = 1; k <= N; k++){ const c = 2*(k-1);
+    blocks.push(String.raw`k=${k}:\ ${(al[c].re**2 + al[c+1].re**2).toFixed(4)} \to ${(sh[c].re**2 + sh[c+1].re**2).toFixed(4)}`); }
+  const TT = mm(H(Tm), Tm); let dev = 0; TT.forEach((r, i) => r.forEach((z, j) => dev = Math.max(dev, Math.hypot(z.re - (i === j), z.im))));
+  const [mn, ex] = Math.max(dev, 1e-17).toExponential(1).split('e');
+  document.getElementById('normStat').innerHTML =
+    String.raw`\[\|f\|^2 = ${norm2(al).toFixed(6)} \;\to\; \|e^{aD}f\|^2 = ${norm2(sh).toFixed(6)}\]` +
+    String.raw`\[\text{${T('各區塊範數（不變子空間）', 'Block norms (invariant subspaces)')}}:\quad ${blocks.join(String.raw`,\qquad `)}\]` +
+    String.raw`\[\max\big|(e^{aD})^\dagger e^{aD} - I\big| = ${mn}\times 10^{${+ex}} \;\Rightarrow\; \text{unitary}\]`;
+}
+
+// 動畫
+let playing = false, last = 0;
+function playLabel(){ document.getElementById('play').textContent = playing ? T('⏸ 暫停', '⏸ Pause') : T('▶ 播放', '▶ Play'); }
+document.getElementById('play').onclick = () => { playing = !playing; playLabel(); if (playing){ last = 0; requestAnimationFrame(step); } };
+function step(t){
+  if (!playing) return;
+  if (last){ const R = document.getElementById('aS'); let v = +R.value + (t - last)/1000*0.8; if (v > 2*Math.PI) v -= 2*Math.PI;
+    R.value = v; document.getElementById('aSN').value = v.toFixed(2); drawM2(); }
+  last = t; requestAnimationFrame(step);
+}
+
+function drawAll(){ drawM1(); drawM2(); }
+link('aS', 'aSN', drawM2); link('mT', 'mTN', drawM2);
+buildCoefCtrl(); playLabel();
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawAll, 150); });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawAll);
+drawAll(); tex();
+texObs.observe(document.body, {childList:true, subtree:true, characterData:true});
+</script>
+</body>
+</html>
