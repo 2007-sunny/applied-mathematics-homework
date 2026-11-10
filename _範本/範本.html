@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!-- 作者：Claude Opus 5.5（應數 AI 作業網站 範本），20261111 -->
+<!-- 用法：複製到新作業資料夾，改 <title>、題目、原理、模組內容。已處理好：KaTeX、中英切換、深淺色、高解析度螢幕、下載。 -->
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>作業標題</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+:root{--bg:#f7f6f2;--card:#fff;--ink:#1f2328;--muted:#5b6170;--line:#d9d7d0;--a:#2563c9;--b:#d9731a;--c:#1a9b6c;--grid:#ecebe6;--accent-bg:#eef3fb}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#16181d;--card:#1f2229;--ink:#e7e9ee;--muted:#a2a8b5;--line:#343844;--a:#6ea2ff;--b:#ffa04d;--c:#45d19c;--grid:#2a2e37;--accent-bg:#1c2738}}
+:root[data-theme="dark"]{--bg:#16181d;--card:#1f2229;--ink:#e7e9ee;--muted:#a2a8b5;--line:#343844;--a:#6ea2ff;--b:#ffa04d;--c:#45d19c;--grid:#2a2e37;--accent-bg:#1c2738}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC","Segoe UI",system-ui,sans-serif;line-height:1.7}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:1.6rem;margin:.3em 0} h2{font-size:1.25rem;margin:.2em 0 .6em} h3{font-size:1.05rem;margin:1em 0 .4em}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button,select,input[type=number]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px 12px}
+button{cursor:pointer} button:hover{border-color:var(--a)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:16px 0;min-width:0;overflow-wrap:anywhere}
+.eq{background:var(--accent-bg);padding:4px 14px;border-radius:8px;margin:8px 0;overflow-x:auto}
+.muted{color:var(--muted)}
+.ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 18px;margin:10px 0}
+.ctrl label{display:flex;flex-direction:column;gap:4px}
+.row{display:flex;gap:8px;align-items:center} .row input[type=range]{flex:1;min-width:0} .row input[type=number]{width:80px}
+.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.plot{border:1px solid var(--line);border-radius:10px;padding:8px;min-width:0}
+canvas{width:100%;display:block}
+/* KaTeX：長公式在框內捲動；position:relative 避免隱藏的 MathML 撐出整頁水平捲軸 */
+.katex{font-size:1.05em;position:relative}
+.katex-display{overflow-x:auto;overflow-y:hidden;padding:2px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1><span class="t" data-en="English title">中文標題</span></h1>
+  <div class="btns"><button id="langBtn">English</button><button id="dlBtn"><span class="t" data-en="Download HTML">下載 HTML</span></button></div>
+</header>
+
+<section class="card">
+  <h2><span class="t" data-en="Problem">題目</span></h2>
+  <!-- 行內公式用 \( \)，獨立公式用 \[ \]。HTML 裡的小於號寫成 \lt，不要直接打 < -->
+  <p class="t" data-en="English problem with \(f(x) = A\sin kx\).">中文題目，例如 \(f(x) = A\sin kx\)。</p>
+</section>
+
+<section class="card">
+  <h2><span class="t" data-en="Physical Principles">物理原理解析</span></h2>
+  <div class="eq">\[f(x) = A \sin kx\]</div>
+</section>
+
+<section class="card">
+  <h2><span class="t" data-en="Module 1">模組 1</span></h2>
+  <div class="ctrl">
+    <label><span class="t" data-en="Amplitude \(A\)">振幅 \(A\)</span>
+      <div class="row"><input type="range" id="A" min="0" max="2" step="0.05" value="1"><input type="number" id="AN" min="0" max="2" step="0.05" value="1"></div></label>
+    <label><span class="t" data-en="Wavenumber \(k\)">波數 \(k\)</span>
+      <div class="row"><input type="range" id="k" min="1" max="5" value="2"><input type="number" id="kN" min="1" max="5" value="2"></div></label>
+  </div>
+  <div class="plots"><div class="plot"><canvas id="c1" height="280"></canvas></div></div>
+  <div id="stat1"></div>
+</section>
+</div>
+
+<script>
+// ---------- KaTeX：內容一更新就自動重新渲染（用 setTimeout，背景分頁也會跑） ----------
+function tex(){ if (window.renderMathInElement) renderMathInElement(document.body, {
+  delimiters:[{left:'\\[', right:'\\]', display:true}, {left:'\\(', right:'\\)', display:false}],
+  ignoredTags:['script','noscript','style','textarea','option','select'], throwOnError:false}); }
+let texPending = false;
+const texObs = new MutationObserver(() => { if (texPending) return; texPending = true; setTimeout(() => { texPending = false; tex(); }, 0); });
+
+// ---------- 中英切換：中文寫在元素內容，英文寫在 data-en ----------
+let lang = 'zh';
+const T = (zh, en) => lang === 'zh' ? zh : en;
+document.querySelectorAll('.t').forEach(el => { el.dataset.zh = el.innerHTML; });
+function setLang(l){ lang = l;
+  document.documentElement.lang = l === 'zh' ? 'zh-Hant' : 'en';
+  document.querySelectorAll('.t').forEach(el => { el.innerHTML = l === 'zh' ? el.dataset.zh : el.dataset.en; });
+  document.getElementById('langBtn').textContent = l === 'zh' ? 'English' : '中文';
+  drawAll(); }
+document.getElementById('langBtn').onclick = () => setLang(lang === 'zh' ? 'en' : 'zh');
+document.getElementById('dlBtn').onclick = () => {
+  fetch(location.href).then(r => r.text()).catch(() => null).then(src => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([src || '<!DOCTYPE html>\n' + document.documentElement.outerHTML], {type:'text/html'}));
+    a.download = location.pathname.split('/').pop() || 'page.html'; a.click(); }); };
+
+// ---------- 畫布：原始高度存在 data-h，避免高解析度螢幕上越畫越高 ----------
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function setup(cv){
+  if (!cv.dataset.h) cv.dataset.h = cv.getAttribute('height');
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = +cv.dataset.h;
+  cv.width = w*dpr; cv.height = h*dpr; cv.style.height = h + 'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+  return {ctx, w, h}; }
+function link(r, n, cb){ const R = document.getElementById(r), N = document.getElementById(n);
+  R.oninput = () => { N.value = R.value; cb(); };
+  N.onchange = () => { const v = Math.min(+N.max, Math.max(+N.min, +N.value || 0)); N.value = v; R.value = v; cb(); }; }
+const val = id => +document.getElementById(id).value;
+
+// ---------- 模組 1（範例，換成自己的內容） ----------
+function drawM1(){
+  const A = val('A'), k = val('k'), {ctx, w, h} = setup(document.getElementById('c1'));
+  ctx.strokeStyle = css('--grid'); ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
+  ctx.strokeStyle = css('--a'); ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let i = 0; i <= 400; i++){ const x = i/400*2*Math.PI, px = i/400*w, py = h/2 - A*Math.sin(k*x)*h/5; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+  ctx.stroke();
+  // 動態公式用 String.raw 寫，反斜線不用重複
+  document.getElementById('stat1').innerHTML = String.raw`\[f(x) = ${A.toFixed(2)}\,\sin ${k}x\]`;
+}
+function drawAll(){ drawM1(); }
+link('A', 'AN', drawM1); link('k', 'kN', drawM1);
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(drawAll, 150); });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawAll);
+drawAll(); tex();
+texObs.observe(document.body, {childList:true, subtree:true, characterData:true});
+</script>
+</body>
+</html>
